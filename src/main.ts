@@ -43,6 +43,7 @@ sensorButton.addEventListener("click", () => {
     });
 });
 
+
 let points = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!;
 statusPanel.innerHTML = "No points yet...";
