@@ -3,7 +3,7 @@ import "./style.css";
 import leaflet from "leaflet";
 import luck from "./luck";
 import "./leafletWorkaround";
-import {Board, Geocache, Cell, Coin} from "./board";
+import { Board, Geocache, Cell, Coin } from "./board";
 
 const MERRILL_CLASSROOM = leaflet.latLng({
   lat: 36.9995,
@@ -68,46 +68,6 @@ sensorButton.addEventListener("click", () => {
   });
 });
 
-const moveSouthButton = document.querySelector("#south")!;
-  moveSouthButton.addEventListener("click", () => {
-  moveMapToPlayer();
-  playerMarker.getLatLng().lat -= 0.0001;
-  const markerLatLng = playerMarker.getLatLng();
-  playerMarker.setLatLng(markerLatLng);
-  map.setView(playerMarker.getLatLng());
-  });
-
-  const moveNorthButton = document.querySelector("#north")!;
-  moveNorthButton.addEventListener("click", () => {
-  moveMapToPlayer();
-  playerMarker.getLatLng().lat += 0.0001;
-  const markerLatLng = playerMarker.getLatLng();
-  playerMarker.setLatLng(markerLatLng);
-  map.setView(playerMarker.getLatLng());
-  });
-
-  const moveEastButton = document.querySelector("#east")!;
-  moveEastButton.addEventListener("click", () => {
-  moveMapToPlayer();
-  playerMarker.getLatLng().lng += 0.0001;
-  const markerLatLng = playerMarker.getLatLng();
-  playerMarker.setLatLng(markerLatLng);
-  map.setView(playerMarker.getLatLng());
-  });
-
-  const moveWestButton = document.querySelector("#west")!;
-  moveWestButton.addEventListener("click", () => {
-  moveMapToPlayer();
-  playerMarker.getLatLng().lng -= 0.0001;
-  const markerLatLng = playerMarker.getLatLng();
-  playerMarker.setLatLng(markerLatLng);
-  map.setView(playerMarker.getLatLng());
-});
-
-/*
-let points = 0;
-const coins: string[] = [];
-*/
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!;
 statusPanel.innerHTML = "No points yet...";
 
@@ -125,22 +85,14 @@ function makePit(cell: Cell) {
   pit.bindPopup(() => {
     const container = document.createElement("div");
     const popUp = document.createElement("span");
-    popUp.innerHTML = `Coins in cache: <span id="cellCoords">${cell.i}, ${cell.j}</span> contains <span id="numCoins">${allCache.getNumCoins()} coins</span>`;
+    popUp.innerHTML = `Coins in cache: <span id="cellCoords">${cell.i}, ${
+      cell.j
+    }</span> contains <span id="numCoins">${allCache.getNumCoins()} coins</span>`;
     const deposit = document.createElement("button");
     deposit.innerHTML = "Deposit";
     const currButton = document.createElement("div");
 
-
-
-
-    /*
-    popUp.innerHTML = `Cache: <span id="cellCoords">${cell.i}, ${
-      cell.j
-    }</span> contains <span id="numCoins">${allCache.getNumCoins()} coins</span>`;*/
-
-
-
-    allCache.getCoinNames().forEach(currCoin => {
+    allCache.getCoinNames().forEach((currCoin) => {
       //const const currButton = createButton
       const thisButton = document.createElement("button");
       thisButton.innerText = currCoin;
@@ -150,9 +102,8 @@ function makePit(cell: Cell) {
           currCoins.push(holdingCoin);
           statusPanel.innerText = `withdrawn coin: ${holdingCoin.toNameString()}`;
           thisButton.hidden = true;
-          container.querySelector<HTMLSpanElement>(
-            "#numCoins"
-          )!.innerText = `${allCache.getNumCoins().toString()} coins`;
+          container.querySelector<HTMLSpanElement>("#numCoins")!.innerText =
+            `${allCache.getNumCoins().toString()} coins`;
           statusPanel.innerText = `${currCoins.length} points accumulated`;
           momentos.set(cell, allCache.toMomento());
         }
@@ -166,23 +117,22 @@ function makePit(cell: Cell) {
         allCache.addCoin(holdingCoin);
         statusPanel.innerText = `deposited coin: ${holdingCoin.toNameString()}`;
         //const button = createButton(holdingCoin.toNameString());
-
         const thisButton = document.createElement("button");
         thisButton.innerText = holdingCoin.toNameString();
         thisButton.addEventListener("click", () => {
-          const newholdingCoin = allCache.removeCoin(holdingCoin.toNameString());
+          const newholdingCoin = allCache.removeCoin(
+            holdingCoin.toNameString(),
+          );
           if (newholdingCoin != undefined) {
             currCoins.push(newholdingCoin);
             statusPanel.innerText = `withdrawn coin: ${newholdingCoin.toNameString()}`;
             thisButton.hidden = true;
-            container.querySelector<HTMLSpanElement>(
-              "#numCoins"
-            )!.innerText = `${allCache.getNumCoins().toString()} coins`;
+            container.querySelector<HTMLSpanElement>("#numCoins")!.innerText =
+              `${allCache.getNumCoins().toString()} coins`;
             statusPanel.innerText = `${currCoins.length} points accumulated`;
             momentos.set(cell, allCache.toMomento());
           }
         });
-
 
         currButton.append(thisButton);
       }
@@ -194,7 +144,6 @@ function makePit(cell: Cell) {
 
   pit.addTo(map);
 }
-
 
 function spawnCache(currPos: leaflet.LatLng) {
   const nearbyCells = mapBoard.getCellsNearPoint(currPos);

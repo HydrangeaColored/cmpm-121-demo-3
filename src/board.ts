@@ -1,4 +1,3 @@
-
 import leaflet from "leaflet";
 import luck from "./luck";
 
@@ -31,23 +30,36 @@ export class Board {
   getCellForPoint(point: leaflet.LatLng): Cell {
     return this.getCanonicalCell({
       i: Math.floor(point.lat / this.tileWidth),
-      j: Math.floor(point.lng / this.tileWidth)
+      j: Math.floor(point.lng / this.tileWidth),
     });
   }
 
   getCellBounds(cell: Cell): leaflet.LatLngBounds {
     return leaflet.latLngBounds([
       [cell.i * this.tileWidth, cell.j * this.tileWidth],
-      [(cell.i + 1) * this.tileWidth, (cell.j + 1) * this.tileWidth]
+      [(cell.i + 1) * this.tileWidth, (cell.j + 1) * this.tileWidth],
     ]);
   }
 
   getCellsNearPoint(point: leaflet.LatLng): Cell[] {
     const resultCells: Cell[] = [];
     const originCell = this.getCellForPoint(point);
-    for (let currLatMod = -this.tileVisibilityRadius; currLatMod < this.tileVisibilityRadius; currLatMod++){
-      for (let currLongMod = -this.tileVisibilityRadius; currLongMod < this.tileVisibilityRadius; currLongMod++){
-        resultCells.push(this.getCanonicalCell({ i: originCell.i + currLatMod, j: originCell.j + currLongMod }));
+    for (
+      let currLatMod = -this.tileVisibilityRadius;
+      currLatMod < this.tileVisibilityRadius;
+      currLatMod++
+    ) {
+      for (
+        let currLongMod = -this.tileVisibilityRadius;
+        currLongMod < this.tileVisibilityRadius;
+        currLongMod++
+      ) {
+        resultCells.push(
+          this.getCanonicalCell({
+            i: originCell.i + currLatMod,
+            j: originCell.j + currLongMod,
+          }),
+        );
       }
     }
     return resultCells;
@@ -59,7 +71,7 @@ interface Momento<T> {
   fromMomento(momento: T): void;
 }
 
-export class Coin{
+export class Coin {
   cell: Cell;
   serial: number;
 
@@ -85,8 +97,10 @@ export class Geocache implements Momento<string> {
       return this;
     }
     this.currCoins = [];
-    const startCoinNum = Math.floor(luck([cell.i, cell.j, "startNum"].toString()) * 5);
-    for (let serialNum = 0; serialNum < startCoinNum; serialNum++){
+    const startCoinNum = Math.floor(
+      luck([cell.i, cell.j, "startNum"].toString()) * 5,
+    );
+    for (let serialNum = 0; serialNum < startCoinNum; serialNum++) {
       this.addCoin(new Coin(cell, serialNum));
     }
   }
@@ -95,7 +109,7 @@ export class Geocache implements Momento<string> {
     this.currCoins.push(coin);
   }
 
-  removeCoin(currCoin: string): Coin | undefined{
+  removeCoin(currCoin: string): Coin | undefined {
     const removedCoin = this.currCoins.find((coin) => {
       return coin.toNameString() == currCoin;
     });
@@ -105,11 +119,11 @@ export class Geocache implements Momento<string> {
     return removedCoin;
   }
 
-  getNumCoins(): number{
+  getNumCoins(): number {
     return this.currCoins.length;
   }
 
-  getCoinNames(): string[]{
+  getCoinNames(): string[] {
     return this.currCoins.map((coin) => coin.toNameString());
   }
 
@@ -125,11 +139,11 @@ export class Geocache implements Momento<string> {
         j: data.cell.j,
       }),
       this.board,
-      data.currCoins
+      data.currCoins,
     );
     const currCoins: Coin[] = [];
     geocache.currCoins.forEach((_coin, index) =>
-    currCoins.push(new Coin(geocache.cell, index))
+      currCoins.push(new Coin(geocache.cell, index)),
     );
     geocache.currCoins = currCoins;
     return geocache;
