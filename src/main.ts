@@ -68,6 +68,46 @@ sensorButton.addEventListener("click", () => {
   });
 });
 
+const moveSouthButton = document.querySelector("#south")!;
+moveSouthButton.addEventListener("click", () => {
+  moveMapToPlayer();
+  playerMarker.getLatLng().lat -= 0.0001;
+  const markerLatLng = playerMarker.getLatLng();
+  playerMarker.setLatLng(markerLatLng);
+  map.setView(playerMarker.getLatLng());
+});
+
+const moveNorthButton = document.querySelector("#north")!;
+moveNorthButton.addEventListener("click", () => {
+  moveMapToPlayer();
+  playerMarker.getLatLng().lat += 0.0001;
+  const markerLatLng = playerMarker.getLatLng();
+  playerMarker.setLatLng(markerLatLng);
+  map.setView(playerMarker.getLatLng());
+});
+
+const moveEastButton = document.querySelector("#east")!;
+moveEastButton.addEventListener("click", () => {
+  moveMapToPlayer();
+  playerMarker.getLatLng().lng += 0.0001;
+  const markerLatLng = playerMarker.getLatLng();
+  playerMarker.setLatLng(markerLatLng);
+  map.setView(playerMarker.getLatLng());
+});
+
+const moveWestButton = document.querySelector("#west")!;
+moveWestButton.addEventListener("click", () => {
+  moveMapToPlayer();
+  playerMarker.getLatLng().lng -= 0.0001;
+  const markerLatLng = playerMarker.getLatLng();
+  playerMarker.setLatLng(markerLatLng);
+  map.setView(playerMarker.getLatLng());
+});
+
+/*
+let points = 0;
+const coins: string[] = [];
+*/
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!;
 statusPanel.innerHTML = "No points yet...";
 
@@ -91,6 +131,11 @@ function makePit(cell: Cell) {
     const deposit = document.createElement("button");
     deposit.innerHTML = "Deposit";
     const currButton = document.createElement("div");
+
+    /*
+    popUp.innerHTML = `Cache: <span id="cellCoords">${cell.i}, ${
+      cell.j
+    }</span> contains <span id="numCoins">${allCache.getNumCoins()} coins</span>`;*/
 
     allCache.getCoinNames().forEach((currCoin) => {
       //const const currButton = createButton
@@ -117,6 +162,7 @@ function makePit(cell: Cell) {
         allCache.addCoin(holdingCoin);
         statusPanel.innerText = `deposited coin: ${holdingCoin.toNameString()}`;
         //const button = createButton(holdingCoin.toNameString());
+
         const thisButton = document.createElement("button");
         thisButton.innerText = holdingCoin.toNameString();
         thisButton.addEventListener("click", () => {
