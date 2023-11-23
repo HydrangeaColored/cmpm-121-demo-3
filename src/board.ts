@@ -10,50 +10,54 @@ export class Board {
   readonly tileWidth: number;
   readonly tileVisibilityRadius: number;
 
-  private readonly knownCells: Map<string, Cell>;
+  knownCells: Map<string, string>;
 
   constructor(tileWidth: number, tileVisibilityRadius: number) {
     this.tileWidth = tileWidth;
-    this.tileVisibilityRadius = tileVisibilityRadius / this.tileWidth;
+    this.tileVisibilityRadius = tileVisibilityRadius;
     this.knownCells = new Map();
   }
 
   getCanonicalCell(cell: Cell): Cell {
-    const { i, j } = cell;
-    const key = [i, j].toString();
+    const cache = new Geocache(cell);
+    const key = [cell.i, cell.j].toString();
     if (!this.knownCells.has(key)) {
-      this.knownCells.set(key, { i: i, j: j });
+      cache.cellCoins(cell);
+      this.knownCells.set(key, cache.toMomento());
     }
-    return this.knownCells.get(key)!;
+    return cache.cell;
+  }
+
+  updateCurrCells(currBoard: string[][]) {
+    currBoard.forEach((cache) => {
+      this.knownCells.set(cache[0], cache[1]);
+    });
+  }
+
+  getCacheForPoint(cell: Cell): Geocache {
+    const key = [cell.i, cell.j].toString();
+    return new Geocache(cell).fromMomento(this.knownCells.get(key)!);
   }
 
   getCellForPoint(point: leaflet.LatLng): Cell {
     return this.getCanonicalCell({
-      i: Math.floor(point.lat / this.tileWidth),
-      j: Math.floor(point.lng / this.tileWidth),
+      i: Number(point.lat.toFixed(4)),
+      j: Number(point.lng.toFixed(4)),
     });
   }
 
   getCellBounds(cell: Cell): leaflet.LatLngBounds {
     return leaflet.latLngBounds([
-      [cell.i * this.tileWidth, cell.j * this.tileWidth],
-      [(cell.i + 1) * this.tileWidth, (cell.j + 1) * this.tileWidth],
+      [cell.i, cell.j],
+      [cell.i + this.tileWidth, cell.j + this.tileWidth],
     ]);
   }
 
   getCellsNearPoint(point: leaflet.LatLng): Cell[] {
     const resultCells: Cell[] = [];
     const originCell = this.getCellForPoint(point);
-    for (
-      let currLatMod = -this.tileVisibilityRadius;
-      currLatMod < this.tileVisibilityRadius;
-      currLatMod++
-    ) {
-      for (
-        let currLongMod = -this.tileVisibilityRadius;
-        currLongMod < this.tileVisibilityRadius;
-        currLongMod++
-      ) {
+    for (let currLatMod = -1; currLatMod < 2; currLatMod++) {
+      for (let currLongMod = -1; currLongMod < 2; currLongMod++) {
         resultCells.push(
           this.getCanonicalCell({
             i: originCell.i + currLatMod,
@@ -66,18 +70,19 @@ export class Board {
   }
 }
 
-interface Momento<T> {
-  toMomento(): T;
-  fromMomento(momento: T): void;
-}
-
 export class Coin {
   cell: Cell;
   serial: number;
+  id: string;
 
   constructor(cell: Cell, serial: number) {
     this.cell = cell;
     this.serial = serial;
+    this.id = [this.cell.i, this.cell.j, serial].toString();
+  }
+
+  toString(): string {
+    return this.id;
   }
 
   toNameString(): string {
@@ -85,73 +90,44 @@ export class Coin {
   }
 }
 
-export class Geocache implements Momento<string> {
+export class Geocache {
   cell: Cell;
-  private currCoins: Coin[];
-  private board: Board;
-  constructor(cell: Cell, board: Board, coinArray?: Coin[]) {
+  currCoins: Coin[];
+  constructor(cell: Cell) {
     this.cell = cell;
-    this.board = board;
-    if (coinArray != undefined) {
-      this.currCoins = coinArray;
-      return this;
-    }
     this.currCoins = [];
-    const startCoinNum = Math.floor(
-      luck([cell.i, cell.j, "startNum"].toString()) * 5,
-    );
-    for (let serialNum = 0; serialNum < startCoinNum; serialNum++) {
-      this.addCoin(new Coin(cell, serialNum));
-    }
   }
 
   addCoin(coin: Coin) {
     this.currCoins.push(coin);
   }
 
-  removeCoin(currCoin: string): Coin | undefined {
-    const removedCoin = this.currCoins.find((coin) => {
-      return coin.toNameString() == currCoin;
+  removeCoin(currCoin: Coin) {
+    this.currCoins.forEach((item, index) => {
+      if (item == currCoin) {
+        this.currCoins.splice(index, 1);
+      }
     });
-    if (removedCoin != undefined) {
-      this.currCoins = this.currCoins.filter((coin) => coin != removedCoin);
+  }
+
+  cellCoins(currCell: Cell) {
+    const totalValue = Math.floor(
+      luck([currCell.i, currCell.j, "initialValue"].toString()) * 5,
+    );
+    for (let currValue = 0; currValue < totalValue + 1; currValue++) {
+      const currCoin = new Coin(currCell, currValue);
+      this.addCoin(currCoin);
     }
-    return removedCoin;
-  }
-
-  getNumCoins(): number {
-    return this.currCoins.length;
-  }
-
-  getCoinNames(): string[] {
-    return this.currCoins.map((coin) => coin.toNameString());
   }
 
   toMomento() {
     return JSON.stringify(this);
   }
 
-  fromJSON(json: string): Geocache {
-    const data = JSON.parse(json) as Geocache;
-    const geocache = new Geocache(
-      this.board.getCanonicalCell({
-        i: data.cell.i,
-        j: data.cell.j,
-      }),
-      this.board,
-      data.currCoins,
-    );
-    const currCoins: Coin[] = [];
-    geocache.currCoins.forEach((_coin, index) =>
-      currCoins.push(new Coin(geocache.cell, index)),
-    );
-    geocache.currCoins = currCoins;
-    return geocache;
-  }
-
   fromMomento(momento: string) {
     const recoveredGeocache = JSON.parse(momento) as Geocache;
     this.cell = recoveredGeocache.cell;
     this.currCoins = recoveredGeocache.currCoins;
+    return this;
   }
 }
